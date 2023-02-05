@@ -1,8 +1,8 @@
 # -Fork-_Grenade_trails
 The tail behind the grenades/Хвост за гранатами
 
-EN
+# EN
 Hosts are displayed only for their team
 
-RU
+# RU
 Хосты отображаются только для своей команды
