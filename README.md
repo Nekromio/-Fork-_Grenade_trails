@@ -7,15 +7,15 @@ Tails are displayed only for your team
 # RU
 Хвосты отображаются только для своей команды
 
-> Имеется файл настроек по пути /cfg/sourcemod/grenade_trails.cfg
+Имеется файл настроек по пути /cfg/sourcemod/grenade_trails.cfg
 
 > // Цвет хвоста флешки
 > sm_color_fl "255 255 255"
 
-> // Цвет хвоста  ХЕшки
+> // Цвет хвоста  ХЕшки  
 > sm_color_he "255 0 0"
 
-> // Цвет хвоста дыма
+> // Цвет хвоста дыма  
 > sm_color_smoke "0 0 0"
 
 > // Включить следы от слеповой гранаты?
