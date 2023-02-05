@@ -2,7 +2,7 @@
 The tail behind the grenades/Хвост за гранатами
 
 # EN
-Hosts are displayed only for their team
+Tails are displayed only for your team
 
 # RU
-Хосты отображаются только для своей команды
+Хвосты отображаются только для своей команды
