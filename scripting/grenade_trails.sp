@@ -13,7 +13,7 @@ public Plugin myinfo =
 	name = "[Fork] Grenade trails/Хвост Гранат",
 	author = "NoTiCE, Nek.'a 2x2",
 	description = "Хвост за гранатами",
-	version = "1.1.3",
+	version = "1.2.0",
 	url = "https://ggwp.site/"
 };
 
@@ -191,19 +191,45 @@ public void OnEntityCreated(int entity, const char[] classname)
 	}
 }
 
-int OwnerEntity(int entity, int index)
+void OwnerEntity(int entity, int index, char classname[24])
 {
 	if(!IsValidEntity(entity))
-		return 0;
+		return;
 		
 	int client = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
 	
 	if(!IsValidClient(client))
-		return 0;
+		return;
+
+	if(!CheckClass(index, classname))
+		return;
 		
 	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 	iOwnerEntity[client][index] = entity;
-	return client;
+}
+
+bool CheckClass(int index, char classname[24])
+{
+	switch(index)
+	{
+		case 0:
+		{
+			if(StrEqual(classname, "flashbang_projectile", false))
+			 return true;
+		}
+		case 1:
+		{
+			if(StrEqual(classname, "hegrenade_projectile", false))
+			 return true;
+		}
+		case 2:
+		{
+			if(StrEqual(classname, "smokegrenade_projectile", false) || StrEqual(classname, "env_particlesmokegrenade", false))
+			 return true;
+		}
+		default: return false;
+	}
+	return false;
 }
 
 public void EntityCreated(Handle hDataPack)
@@ -211,27 +237,27 @@ public void EntityCreated(Handle hDataPack)
 	DataPack hPack = view_as<DataPack>(hDataPack);
 	hPack.Reset();
 	int entity = hPack.ReadCell();
-	char classname[256];
+	char classname[24];
 	hPack.ReadString(classname, sizeof(classname));
 	
 	if(StrEqual(classname, "flashbang_projectile", false) && cvEnable[0].BoolValue)
 	{
-		OwnerEntity(entity, 0);
+		OwnerEntity(entity, 0, classname);
 	}
 	
 	if(StrEqual(classname, "hegrenade_projectile", false) && cvEnable[1].BoolValue)
 	{
-		OwnerEntity(entity, 1);
+		OwnerEntity(entity, 1, classname);
 	}
 	
 	if(StrEqual(classname, "smokegrenade_projectile", false) && cvEnable[2].BoolValue)
 	{
-		OwnerEntity(entity, 2);
+		OwnerEntity(entity, 2, classname);
 	}
 	
 	if(StrEqual(classname, "env_particlesmokegrenade", false) && cvEnable[2].BoolValue)
 	{
-		OwnerEntity(entity, 2);
+		OwnerEntity(entity, 2, classname);
 	}
 	
 	delete hPack;
@@ -285,13 +311,12 @@ Action TimerSpawnProj(Handle hTimer, Handle hDataPack)
 	char sProj[512];
 	hPack.ReadString(sProj, sizeof(sProj));
 	
-	Hook_OnSpawnNadeProjectile(index, entity, sProj);
+	if(IsValidEntity(entity))
+		Hook_OnSpawnNadeProjectile(index, entity, sProj);
 	
 	delete hPack;
 	return Plugin_Stop;
 }
-
-
 
 void Hook_OnSpawnNadeProjectile(int index, int entity, char[] vmt)
 {
@@ -316,6 +341,9 @@ void Hook_OnSpawnNadeProjectile(int index, int entity, char[] vmt)
 		break;
 	}
 	
+	if(!IsValidClient(client))
+		return;
+	
 	char Name[32]; float fPos[3];
 	Format(Name, sizeof(Name), "SmokeParticle_%i", entity);
 	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", fPos);
@@ -335,14 +363,20 @@ void Hook_OnSpawnNadeProjectile(int index, int entity, char[] vmt)
 	DispatchKeyValue(particle, "Initial", "0");
 	DispatchKeyValue(particle, "Speed", "10");
 	DispatchKeyValue(particle, "Rate", "173");
-	SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", client);
-	DispatchSpawn(particle);
-	SetEdictFlags(particle, GetEdictFlags(particle) & ~(FL_EDICT_ALWAYS|FL_EDICT_DONTSEND|FL_EDICT_PVSCHECK));
-	SDKHook(particle, SDKHook_SetTransmit, OnTransmit);
-	
-	SetVariantString("!activator");
-	AcceptEntityInput(particle, "SetParent", entity, particle, 0);
-	AcceptEntityInput(particle, "TurnOn");
+	if(IsValidEntity(particle) && IsValidClient(client))
+	{
+		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", client);
+
+
+		
+		DispatchSpawn(particle);
+		SetEdictFlags(particle, GetEdictFlags(particle) & ~(FL_EDICT_ALWAYS|FL_EDICT_DONTSEND|FL_EDICT_PVSCHECK));
+		SDKHook(particle, SDKHook_SetTransmit, OnTransmit);
+		
+		SetVariantString("!activator");
+		AcceptEntityInput(particle, "SetParent", entity, particle, 0);
+		AcceptEntityInput(particle, "TurnOn");
+	}
 	
 	Handle hGrenade = CreateArray();
 	PushArrayCell(hGrenade, entity);
@@ -380,8 +414,7 @@ void FullyClearArray(Handle hArray)
 
 bool IsValidClient(int client)
 {
-	if(0<client<=MaxClients)
+	if(0<client<=MaxClients && IsClientInGame(client))
 		return true;
-	else
-		return false;
+	return false;
 }
