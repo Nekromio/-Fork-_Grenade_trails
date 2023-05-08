@@ -8,15 +8,6 @@
 #include <sdkhooks>
 #include <smartdm>
 
-public Plugin myinfo = 
-{
-	name = "[Fork] Grenade trails/Хвост Гранат",
-	author = "NoTiCE, Nek.'a 2x2",
-	description = "Хвост за гранатами",
-	version = "1.2.0",
-	url = "https://ggwp.site/"
-};
-
 ConVar
 	cvEnable[3],
 	cvModels[3],
@@ -33,6 +24,15 @@ int
 
 char
 	sModels[3][512];
+
+public Plugin myinfo = 
+{
+	name = "[Fork] Grenade trails/Хвост Гранат",
+	author = "NoTiCE, Nek.'a 2x2",
+	description = "Хвост за гранатами",
+	version = "1.2.1",
+	url = "https://ggwp.site/"
+};
 
 public void OnPluginStart()
 {
@@ -414,7 +414,5 @@ void FullyClearArray(Handle hArray)
 
 bool IsValidClient(int client)
 {
-	if(0<client<=MaxClients && IsClientInGame(client))
-		return true;
-	return false;
+	return 0<client<=MaxClients && IsClientInGame(client);
 }
