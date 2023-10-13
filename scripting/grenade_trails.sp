@@ -16,21 +16,26 @@ ConVar
 ArrayList
 	hGrenadeArray[3];
 	
-Handle
-	hRestartgame;
-
 int
 	iOwnerEntity[MAXPLAYERS+1][3];
 
 char
 	sModels[3][512];
 
+static const char sListGrenade[][] =
+{
+	"flashbang_projectile",
+	"hegrenade_projectile",
+	"smokegrenade_projectile",
+	"env_particlesmokegrenade"
+};
+
 public Plugin myinfo = 
 {
 	name = "[Fork] Grenade trails/Хвост Гранат",
 	author = "NoTiCE, Nek.'a 2x2",
 	description = "Хвост за гранатами",
-	version = "1.2.1",
+	version = "1.2.4",
 	url = "https://ggwp.site/"
 };
 
@@ -50,8 +55,7 @@ public void OnPluginStart()
 	
 	AutoExecConfig(true, "grenade_trails");
 	
-	hRestartgame = FindConVar("mp_restartgame");
-	HookConVarChange(hRestartgame, ClearAdtArray);
+	HookConVarChange(FindConVar("mp_restartgame"), ClearAdtArray);
 	
 	for(int i; i < 3; i++) hGrenadeArray[i] = CreateArray();
 	
@@ -169,97 +173,62 @@ public void OnEntityCreated(int entity, const char[] classname)
 	hPack.WriteCell(entity);
 	hPack.WriteString(classname);
 	RequestFrame(EntityCreated, hPack);
-	
-	if(StrEqual(classname, "flashbang_projectile", false) && cvEnable[0].BoolValue)
+
+	for(int i; i < sizeof(sListGrenade); i++)
 	{
-		SDKHook(entity, SDKHook_Spawn, Hook_OnSpawnFlashProjectile);
-	}
-	
-	if(StrEqual(classname, "hegrenade_projectile", false) && cvEnable[1].BoolValue)
-	{
-		SDKHook(entity, SDKHook_Spawn, Hook_OnSpawnHEProjectile);
-	}
-	
-	if(StrEqual(classname, "smokegrenade_projectile", false) && cvEnable[2].BoolValue)
-	{
-		SDKHook(entity, SDKHook_Spawn, Hook_OnSpawnSmokeProjectile);
-	}
-	
-	if(StrEqual(classname, "env_particlesmokegrenade", false) && cvEnable[2].BoolValue)
-	{
-		SDKHook(entity, SDKHook_Spawn, Hook_OnSpawnSmokeParticles);
+		int j;
+		if(i != 3) j = i;
+		else j = 2;
+		if(StrEqual(classname, sListGrenade[i], false) && cvEnable[j].BoolValue)
+		{
+			switch(i)
+			{
+				case 0:	SDKHook(entity, SDKHook_Spawn, Hook_OnSpawnFlashProjectile);
+				case 1: SDKHook(entity, SDKHook_Spawn, Hook_OnSpawnHEProjectile);
+				case 2: SDKHook(entity, SDKHook_Spawn, Hook_OnSpawnSmokeProjectile);
+				case 3: SDKHook(entity, SDKHook_Spawn, Hook_OnSpawnSmokeParticles);
+			}
+			
+		}
 	}
 }
 
-void OwnerEntity(int entity, int index, char classname[24])
+void OwnerEntity(int entity, int index)
 {
 	if(!IsValidEntity(entity))
 		return;
-		
+
+	char sName[23];
+	GetEntityClassname(entity, sName, sizeof(entity));
+
+	if(!strcmp(sName, sListGrenade[index]))
+		return;
+	
 	int client = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
 	
 	if(!IsValidClient(client))
 		return;
-
-	if(!CheckClass(index, classname))
-		return;
-		
+	//PrintCenterTextAll("[%s] [%d]", sListGrenade[index], !strcmp(sName, sListGrenade[index]));
 	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", client);
 	iOwnerEntity[client][index] = entity;
 }
 
-bool CheckClass(int index, char classname[24])
+void EntityCreated(DataPack hPack)
 {
-	switch(index)
-	{
-		case 0:
-		{
-			if(StrEqual(classname, "flashbang_projectile", false))
-			 return true;
-		}
-		case 1:
-		{
-			if(StrEqual(classname, "hegrenade_projectile", false))
-			 return true;
-		}
-		case 2:
-		{
-			if(StrEqual(classname, "smokegrenade_projectile", false) || StrEqual(classname, "env_particlesmokegrenade", false))
-			 return true;
-		}
-		default: return false;
-	}
-	return false;
-}
-
-public void EntityCreated(Handle hDataPack)
-{
-	DataPack hPack = view_as<DataPack>(hDataPack);
 	hPack.Reset();
 	int entity = hPack.ReadCell();
 	char classname[24];
 	hPack.ReadString(classname, sizeof(classname));
-	
-	if(StrEqual(classname, "flashbang_projectile", false) && cvEnable[0].BoolValue)
+
+	for(int i; i < sizeof(sListGrenade); i++)
 	{
-		OwnerEntity(entity, 0, classname);
+		if(StrEqual(classname, sListGrenade[i], false) && cvEnable[i].BoolValue)
+		{
+			OwnerEntity(entity, i);
+			break;
+		}
 	}
-	
-	if(StrEqual(classname, "hegrenade_projectile", false) && cvEnable[1].BoolValue)
-	{
-		OwnerEntity(entity, 1, classname);
-	}
-	
-	if(StrEqual(classname, "smokegrenade_projectile", false) && cvEnable[2].BoolValue)
-	{
-		OwnerEntity(entity, 2, classname);
-	}
-	
-	if(StrEqual(classname, "env_particlesmokegrenade", false) && cvEnable[2].BoolValue)
-	{
-		OwnerEntity(entity, 2, classname);
-	}
-	
+
 	delete hPack;
 }
 
@@ -367,8 +336,6 @@ void Hook_OnSpawnNadeProjectile(int index, int entity, char[] vmt)
 	{
 		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", client);
 
-
-		
 		DispatchSpawn(particle);
 		SetEdictFlags(particle, GetEdictFlags(particle) & ~(FL_EDICT_ALWAYS|FL_EDICT_DONTSEND|FL_EDICT_PVSCHECK));
 		SDKHook(particle, SDKHook_SetTransmit, OnTransmit);
@@ -414,5 +381,5 @@ void FullyClearArray(Handle hArray)
 
 bool IsValidClient(int client)
 {
-	return 0<client<=MaxClients && IsClientInGame(client);
+	return 0 <client <= MaxClients && IsClientInGame(client);
 }
