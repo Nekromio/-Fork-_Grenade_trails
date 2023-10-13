@@ -6,31 +6,31 @@ Tails are displayed only for your team
 
 There is a settings file at the path /cfg/sourcemod/grenade_trails.cfg  
 
-> // Color of the tail of the flash drive
+> // Color of the tail of the flash drive  
 > sm_color_fl "255 255 255"
 
-> // Hash Tail Color
+> // Hash Tail Color  
 > sm_color_he "255 0 0"
 
-> // Color of the smoke tail
+> // Color of the smoke tail  
 > sm_color_smoke "0 0 0"
 
-> // Include traces of a blind grenade?
+> // Include traces of a blind grenade?  
 > sm_fg_enable "1"
 
-> // Include traces of an explosive grenade?
+> // Include traces of an explosive grenade?  
 > sm_hg_enable "1"
 
-> // Path to the material that will be the tail of the flash drive
+> // Path to the material that will be the tail of the flash drive  
 > sm_model_fl "effects/combinemuzzle2.vmt"
 
-> // Path to the material that will be the tail of the flash drive
+> // Path to the material that will be the tail of the flash drive  
 > sm_model_he "particle/fire.vmt"
 
-> // Path to the material that will be the tail of the flash drive
+> // Path to the material that will be the tail of the flash drive  
 > sm_model_smoke "particle/particle_smokegrenade.vmt"
 
-> // Include smoke grenade traces?
+> // Include smoke grenade traces?  
 > sm_sg_enable "1"
 
 # RU
